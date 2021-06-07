@@ -1,0 +1,21 @@
+services:
+  - docker
+
+before_install:
+  - docker build -t tsugden/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run tsugden/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t tsugden/multi-client ./client
+  - docker build -t tsugden/multi-server ./server
+  - docker build -t tsugden/multi-worker ./worker
+  - docker build -t tsugden/multi-nginx  ./nginx
+  # Log into the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push tsugden/multi-client
+  - docker push tsugden/multi-server
+  - docker push tsugden/multi-worker
+  - docker push tsugden/multi-nginx
